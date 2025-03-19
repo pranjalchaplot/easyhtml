@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const jumpToTopBtn = document.getElementById('jumpToTop');
     const jumpToBottomBtn = document.getElementById('jumpToBottom');
     let scrollTimeout;
-    let scrollThreshold = 150; // Default threshold for showing buttons (in pixels)
-    let hideDelay = 3000; // Default delay before hiding buttons (in milliseconds)
+    let scrollThreshold = 0; // Default threshold for showing buttons (in pixels)
+    let hideDelay = 1400; // Default delay before hiding buttons (in milliseconds)
 
     // Configurable properties (can be saved to storage)
     chrome.storage.local.get(['scrollThreshold', 'hideDelay'], function(result) {
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (result.hideDelay) hideDelay = result.hideDelay;
     });
 
-    htmlInput.addEventListener('scroll', function() {
+    function toggleScrollButton(){
       const scrollPosition = htmlInput.scrollTop;
       const maxScroll = htmlInput.scrollHeight - htmlInput.clientHeight;
       
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
       clearTimeout(scrollTimeout);
       
       // Show/hide appropriate buttons based on scroll position
-      if (scrollPosition > scrollThreshold) {
+      if (scrollPosition >= scrollThreshold) {
         jumpToTopBtn.style.opacity = '1';
       } else {
         jumpToTopBtn.style.opacity = '0';
@@ -43,7 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
         jumpToTopBtn.style.opacity = '0';
         jumpToBottomBtn.style.opacity = '0';
       }, hideDelay);
-    });
+    }
+      
+
+    htmlInput.addEventListener('scroll', toggleScrollButton);
 
     // Button click handlers
     jumpToTopBtn.addEventListener('click', function() {
