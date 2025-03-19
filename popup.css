@@ -124,7 +124,7 @@ h1 {
   padding: 10px;
   resize: none;
   border: none;
-  font-family: monospace;
+  font-family: 'Ubuntu', monospace !important; /* Apply the Ubuntu font */
   font-size: 14px;
   line-height: 1.5;
 }

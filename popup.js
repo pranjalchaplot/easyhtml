@@ -72,20 +72,45 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 500);
     }
 
-    // Function to update the preview
+    function sanitizeHTML(html) {
+      // Create a new div element
+      const tempDiv = document.createElement('div');
+      // Set the HTML content
+      tempDiv.innerHTML = html;
+      
+      // Remove all script tags
+      const scripts = tempDiv.querySelectorAll('script');
+      scripts.forEach(script => script.remove());
+      
+      // Remove all on* attributes from all elements
+      const allElements = tempDiv.getElementsByTagName('*');
+      for (let i = 0; i < allElements.length; i++) {
+        const attributes = allElements[i].attributes;
+        for (let j = 0; j < attributes.length; j++) {
+          if (attributes[j].name.startsWith('on')) {
+            allElements[i].removeAttribute(attributes[j].name);
+            j--; // Adjust index since we removed an attribute
+          }
+        }
+      }
+      
+      return tempDiv.innerHTML;
+    }
+
     function updatePreview() {
       const html = htmlInput.value;
+      const safeHTML = sanitizeHTML(html);
       const iframe = document.getElementById("htmlOutput");
       const doc = iframe.contentDocument || iframe.contentWindow.document;
-
+    
       // Clear existing content
       while (doc.firstChild) {
         doc.removeChild(doc.firstChild);
       }
-
-      // Write the HTML
+    
+      // Write the sanitized HTML
       doc.open();
-      doc.write(html);
+      doc.write(safeHTML);
       doc.close();
     }
 
