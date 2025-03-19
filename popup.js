@@ -382,6 +382,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
 
+      if (chrome && chrome.storage) {
+        chrome.storage.local.set({darkMode: document.body.classList.contains('dark-mode')});
+      }
+
       // Toggle sun and moon icons
       const sunIcon = document.getElementById('sunIcon');
       const moonIcon = document.getElementById('moonIcon');
@@ -397,6 +401,21 @@ document.addEventListener('DOMContentLoaded', function() {
         darkModeToggle.title = 'Enable Dark Mode';
       }
     }
+
+    chrome.storage.local.get(['darkMode'], function(result) {
+      if (result.darkMode) {
+        document.body.classList.add('dark-mode');
+        
+        // Also adjust SVG strokes
+        const svgs = document.querySelectorAll('svg');
+        svgs.forEach(svg => {
+          const paths = svg.querySelectorAll('path');
+          paths.forEach(path => {
+            path.setAttribute('stroke', 'white');
+          });
+        });
+      }
+    });
 
     // Add an event listener to the dark mode toggle button
     document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
