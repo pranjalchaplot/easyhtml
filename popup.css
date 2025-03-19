@@ -143,3 +143,65 @@ h1 {
   margin-bottom: 4px;
   vertical-align: middle; /* Align the dot vertically with the text */
 }
+
+#darkModeToggle {
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+#darkModeToggle svg {
+  display: block;
+}
+
+/* Dark mode styles */
+body.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+body.dark-mode .container {
+  background-color: #1e1e1e;
+}
+
+body.dark-mode .header, 
+body.dark-mode .footer {
+  border-color: #333;
+}
+
+body.dark-mode .icon-btn:hover {
+  background-color: #333;
+}
+
+body.dark-mode .icon-btn.active {
+  background-color: #444;
+}
+
+body.dark-mode .panel {
+  border-color: #333;
+}
+
+body.dark-mode #htmlOutput {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+body.dark-mode .btn {
+  background: linear-gradient(135deg, rgba(50, 50, 50, 0.8), rgba(40, 40, 40, 0.8));
+  border-color: rgba(255, 255, 255, 0.1);
+  color: white; /* Change text color to white */
+}
+
+body.dark-mode .btn:hover {
+  background: linear-gradient(135deg, rgba(50, 50, 50, 0.9), rgba(40, 40, 40, 0.9));
+  box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .format-indicator {
+  background-color: #333;
+  color: #ccc;
+}
+
+body.dark-mode .header-title::after {
+  background-color: #ff6666;
+}

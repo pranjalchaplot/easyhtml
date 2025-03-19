@@ -6,30 +6,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearBtn = document.getElementById('clearBtn');
     const newTabBtn = document.getElementById('newTabBtn');
     const formatMode = document.getElementById('formatMode');
-  
+
     // Format mode state (0: Indented, 1: Left-aligned, 2: Compact)
     let currentFormatMode = 0;
     const formatModes = ['Indented', 'Left-aligned', 'Compact'];
-  
+
     // Load saved content and format mode
     chrome.storage.local.get(['htmlContent', 'formatMode'], function(result) {
       if (result.htmlContent) {
         htmlInput.value = result.htmlContent;
         updatePreview();
       }
-      
+
       if (result.formatMode !== undefined) {
         currentFormatMode = result.formatMode;
         updateFormatModeIndicator();
       }
     });
-  
+
     // Update preview on input
     htmlInput.addEventListener('input', function() {
       updatePreview();
       saveContent();
     });
-  
+
     // Format button click
     formatBtn.addEventListener('click', function() {
       // Cycle through format modes
@@ -37,33 +37,33 @@ document.addEventListener('DOMContentLoaded', function() {
       updateFormatModeIndicator();
       formatHTML();
       showButtonFeedback(formatBtn);
-      
+
       // Save current format mode
       chrome.storage.local.set({formatMode: currentFormatMode});
     });
-  
+
     // Copy button click
     copyBtn.addEventListener('click', function() {
       copyToClipboard();
       showButtonFeedback(copyBtn);
     });
-  
+
     // Clear button click
     clearBtn.addEventListener('click', function() {
       clearHTML();
       showButtonFeedback(clearBtn);
     });
-  
+
     // New Tab button click
     newTabBtn.addEventListener('click', function() {
       openInNewTab();
     });
-  
+
     // Function to update format mode indicator
     function updateFormatModeIndicator() {
       formatMode.textContent = `Format: ${formatModes[currentFormatMode]}`;
     }
-  
+
     // Function to provide visual feedback when buttons are clicked
     function showButtonFeedback(button) {
       button.classList.add('active');
@@ -71,31 +71,39 @@ document.addEventListener('DOMContentLoaded', function() {
         button.classList.remove('active');
       }, 500);
     }
-  
+
     // Function to update the preview
     function updatePreview() {
       const html = htmlInput.value;
-      const doc = htmlOutput.contentDocument;
+      const iframe = document.getElementById("htmlOutput");
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+      // Clear existing content
+      while (doc.firstChild) {
+        doc.removeChild(doc.firstChild);
+      }
+
+      // Write the HTML
       doc.open();
       doc.write(html);
       doc.close();
     }
-  
+
     // Function to clear HTML input
     function clearHTML() {
       htmlInput.value = '';
       updatePreview();
       saveContent();
     }
-  
+
     // Function to format HTML based on current mode
     function formatHTML() {
       try {
         const html = htmlInput.value;
         if (!html.trim()) return;
-        
+
         let formatted;
-        
+
         switch(currentFormatMode) {
           case 0: // Indented
             // Parse and format HTML with indentation
@@ -103,60 +111,60 @@ document.addEventListener('DOMContentLoaded', function() {
             const doc = parser.parseFromString(html, 'text/html');
             formatted = formatNode(doc.documentElement, 0);
             break;
-            
+
           case 1: // Left-aligned
             // Parse and format HTML without indentation (all left-aligned)
             formatted = formatLeftAligned(html);
             break;
-            
+
           case 2: // Compact
             // Remove all unnecessary whitespace
             formatted = formatCompact(html);
             break;
         }
-        
+
         // Set the formatted HTML back to the input
         htmlInput.value = formatted;
-        
+
         // Update preview
         updatePreview();
-        
+
         // Save content
         saveContent();
       } catch (error) {
         console.error('Formatting error:', error);
       }
     }
-  
+
     // Function to format HTML with left alignment
     function formatLeftAligned(html) {
       // Parse the HTML
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
-      
+
       // Format with line breaks but no indentation
       return formatNodeLeftAligned(doc.documentElement);
     }
-    
+
     // Helper function for left-aligned formatting
     function formatNodeLeftAligned(node) {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent.trim();
         return text.length > 0 ? text : '';
       }
-      
+
       if (node.nodeType !== Node.ELEMENT_NODE) {
         return '';
       }
-      
+
       const tagName = node.tagName.toLowerCase();
-      
+
       // Check for inline elements
       const inlineTags = ['span', 'a', 'strong', 'em', 'b', 'i', 'code', 'br'];
       const isInline = inlineTags.includes(tagName);
-      
+
       let innerHTML = '';
-      
+
       // Process child nodes
       for (const child of node.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
@@ -168,17 +176,17 @@ document.addEventListener('DOMContentLoaded', function() {
           innerHTML += isInline ? formatNodeLeftAligned(child) : formatNodeLeftAligned(child) + '\n';
         }
       }
-      
+
       // Construct attributes
       let attributes = '';
       for (const attr of node.attributes) {
         attributes += ` ${attr.name}="${attr.value}"`;
       }
-      
+
       // Self-closing tags
       const selfClosingTags = ['img', 'input', 'br', 'hr', 'meta', 'link'];
       const isSelfClosing = selfClosingTags.includes(tagName) && !node.hasChildNodes();
-      
+
       if (isSelfClosing) {
         return `<${tagName}${attributes} />`;
       } else if (isInline) {
@@ -187,32 +195,32 @@ document.addEventListener('DOMContentLoaded', function() {
         return `<${tagName}${attributes}>\n${innerHTML}</${tagName}>`;
       }
     }
-    
+
     // Function to format HTML in compact mode
     function formatCompact(html) {
       // Parse the HTML
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
-      
+
       // Return compact formatting - all on one line with minimal spacing
       return formatNodeCompact(doc.documentElement);
     }
-    
+
     // Helper function for compact formatting
     function formatNodeCompact(node) {
       if (node.nodeType === Node.TEXT_NODE) {
         // Trim and collapse whitespace
         return node.textContent.trim().replace(/\s+/g, ' ');
       }
-      
+
       if (node.nodeType !== Node.ELEMENT_NODE) {
         return '';
       }
-      
+
       const tagName = node.tagName.toLowerCase();
-      
+
       let innerHTML = '';
-      
+
       // Process child nodes without extra whitespace
       for (const child of node.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
@@ -224,24 +232,24 @@ document.addEventListener('DOMContentLoaded', function() {
           innerHTML += formatNodeCompact(child);
         }
       }
-      
+
       // Construct attributes
       let attributes = '';
       for (const attr of node.attributes) {
         attributes += ` ${attr.name}="${attr.value}"`;
       }
-      
+
       // Self-closing tags
       const selfClosingTags = ['img', 'input', 'br', 'hr', 'meta', 'link'];
       const isSelfClosing = selfClosingTags.includes(tagName) && !node.hasChildNodes();
-      
+
       if (isSelfClosing) {
         return `<${tagName}${attributes}/>`;
       } else {
         return `<${tagName}${attributes}>${innerHTML}</${tagName}>`;
       }
     }
-  
+
     // Helper function to format HTML node with indentation
     function formatNode(node, level) {
       if (node.nodeType === Node.TEXT_NODE) {
@@ -249,23 +257,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const text = node.textContent.trim();
         return text.length > 0 ? text : '';
       }
-      
+
       if (node.nodeType !== Node.ELEMENT_NODE) {
         return '';
       }
-      
+
       const tagName = node.tagName.toLowerCase();
       const indent = '  '.repeat(level);
       const nextIndent = '  '.repeat(level + 1);
-      
+
       // Skip formatting for specific tags
       const inlineTags = ['span', 'a', 'strong', 'em', 'b', 'i', 'code', 'br'];
       const isInline = inlineTags.includes(tagName);
-      
+
       let innerHTML = '';
       let hasTextContent = false;
       let hasElementContent = false;
-      
+
       // Process child nodes
       for (const child of node.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
@@ -279,17 +287,17 @@ document.addEventListener('DOMContentLoaded', function() {
           hasElementContent = true;
         }
       }
-      
+
       // Construct element string
       let attributes = '';
       for (const attr of node.attributes) {
         attributes += ` ${attr.name}="${attr.value}"`;
       }
-      
+
       // Determine if the tag should be self-closing
       const selfClosingTags = ['img', 'input', 'br', 'hr', 'meta', 'link'];
       const isSelfClosing = selfClosingTags.includes(tagName) && !node.hasChildNodes();
-      
+
       if (isSelfClosing) {
         return `<${tagName}${attributes} />`;
       } else if (isInline || (hasTextContent && !hasElementContent)) {
@@ -300,49 +308,47 @@ document.addEventListener('DOMContentLoaded', function() {
         return `<${tagName}${attributes}>\n${innerHTML}${indent}</${tagName}>`;
       }
     }
-  
+
     // Function to copy HTML to clipboard
     function copyToClipboard() {
       htmlInput.select();
       document.execCommand('copy');
     }
-  
+
     // Function to open HTML in a new tab with CSP
     function openInNewTab() {
       let html = htmlInput.value;
-      
+
       // Add CSP meta tag if not already present
-      if (!html.includes('<meta http-equiv="Content-Security-Policy"')) {
-        const cspTag = '<meta http-equiv="Content-Security-Policy" content="default-src *; script-src * \'unsafe-inline\'; style-src * \'unsafe-inline\';">';
-        
-        // Check if there's a head tag
-        if (html.includes('</head>')) {
-          html = html.replace('</head>', cspTag + '</head>');
-        } else if (html.includes('<head>')) {
-          html = html.replace('<head>', '<head>' + cspTag);
-        } else if (html.includes('<html')) {
-          // If there's an html tag but no head, add head with CSP
-          html = html.replace('<html', '<html><head>' + cspTag + '</head><html');
-        } else {
-          // If no html structure exists, wrap the content
-          html = '<!DOCTYPE html><html><head>' + cspTag + '</head><body>' + html + '</body></html>';
-        }
+      let cspTag = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline';">`;
+
+      // Check if there's a head tag
+      if (html.includes("</head>")) {
+        html = html.replace("</head>", cspTag + "</head>");
+      } else if (html.includes("<head>")) {
+        html = html.replace("<head>", "<head>" + cspTag);
+      } else if (html.includes("<html")) {
+        // If there's an html tag but no head, add head with CSP
+        html = html.replace("<html", "<html><head>" + cspTag + "</head>");
+      } else {
+        // If no html structure exists, wrap the content
+        html = "<!DOCTYPE html><html><head>" + cspTag + "</head><body>" + html + "</body></html>";
       }
-      
-      const blob = new Blob([html], {type: 'text/html'});
+
+      const blob = new Blob([html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      chrome.tabs.create({url: url});
+      chrome.tabs.create({ url: url });
     }
-  
+
     // Function to save content to storage
     function saveContent() {
       chrome.storage.local.set({htmlContent: htmlInput.value});
     }
-  
+
     // Initial preview update
     updatePreview();
     updateFormatModeIndicator();
-  
+
     // Add mousemove and mouseleave event listeners to newTabBtn
     document.getElementById('newTabBtn').addEventListener('mousemove', function(e) {
       const btn = e.currentTarget;
@@ -355,8 +361,43 @@ document.addEventListener('DOMContentLoaded', function() {
       const offsetY = (centerY - y) / 10;
       btn.style.boxShadow = `${offsetX}px ${offsetY}px 6px rgba(0, 0, 0, 0.1)`;
     });
-  
+
     document.getElementById('newTabBtn').addEventListener('mouseleave', function(e) {
       e.currentTarget.style.boxShadow = 'none';
     });
-  });
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+
+      // Adjust SVG stroke colors based on current mode
+      const svgs = document.querySelectorAll('svg');
+      svgs.forEach(svg => {
+        const paths = svg.querySelectorAll('path');
+        paths.forEach(path => {
+          if (document.body.classList.contains('dark-mode')) {
+            path.setAttribute('stroke', 'white');
+          } else {
+            path.setAttribute('stroke', 'black');
+          }
+        });
+      });
+
+      // Toggle sun and moon icons
+      const sunIcon = document.getElementById('sunIcon');
+      const moonIcon = document.getElementById('moonIcon');
+      const darkModeToggle = document.getElementById('darkModeToggle');
+
+      if (document.body.classList.contains('dark-mode')) {
+        sunIcon.style.opacity = '0';
+        moonIcon.style.opacity = '1';
+        darkModeToggle.title = 'Disable Dark Mode';
+      } else {
+        sunIcon.style.opacity = '1';
+        moonIcon.style.opacity = '0';
+        darkModeToggle.title = 'Enable Dark Mode';
+      }
+    }
+
+    // Add an event listener to the dark mode toggle button
+    document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+});
