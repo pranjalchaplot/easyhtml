@@ -6,6 +6,74 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearBtn = document.getElementById('clearBtn');
     const newTabBtn = document.getElementById('newTabBtn');
     const formatMode = document.getElementById('formatMode');
+    const jumpToTopBtn = document.getElementById('jumpToTop');
+    const jumpToBottomBtn = document.getElementById('jumpToBottom');
+    let scrollTimeout;
+    let scrollThreshold = 150; // Default threshold for showing buttons (in pixels)
+    let hideDelay = 3000; // Default delay before hiding buttons (in milliseconds)
+
+    // Configurable properties (can be saved to storage)
+    chrome.storage.local.get(['scrollThreshold', 'hideDelay'], function(result) {
+      if (result.scrollThreshold) scrollThreshold = result.scrollThreshold;
+      if (result.hideDelay) hideDelay = result.hideDelay;
+    });
+
+    htmlInput.addEventListener('scroll', function() {
+      const scrollPosition = htmlInput.scrollTop;
+      const maxScroll = htmlInput.scrollHeight - htmlInput.clientHeight;
+      
+      // Clear any existing timeout
+      clearTimeout(scrollTimeout);
+      
+      // Show/hide appropriate buttons based on scroll position
+      if (scrollPosition > scrollThreshold) {
+        jumpToTopBtn.style.opacity = '1';
+      } else {
+        jumpToTopBtn.style.opacity = '0';
+      }
+      
+      if (maxScroll - scrollPosition > scrollThreshold) {
+        jumpToBottomBtn.style.opacity = '1';
+      } else {
+        jumpToBottomBtn.style.opacity = '0';
+      }
+      
+      // Set timeout to hide buttons after delay
+      scrollTimeout = setTimeout(function() {
+        jumpToTopBtn.style.opacity = '0';
+        jumpToBottomBtn.style.opacity = '0';
+      }, hideDelay);
+    });
+
+    // Button click handlers
+    jumpToTopBtn.addEventListener('click', function() {
+      htmlInput.scrollTop = 0;
+    });
+
+    jumpToBottomBtn.addEventListener('click', function() {
+      htmlInput.scrollTop = htmlInput.scrollHeight;
+    });
+
+    // Update SVG colors based on dark mode
+    function updateScrollButtonSvgColors() {
+      const isDarkMode = document.body.classList.contains('dark-mode');
+      const buttons = [jumpToTopBtn, jumpToBottomBtn];
+      
+      buttons.forEach(button => {
+        const paths = button.querySelectorAll('path');
+        paths.forEach(path => {
+          path.setAttribute('stroke', isDarkMode ? 'white' : 'black');
+        });
+      });
+    }
+
+    // Function to save scroll settings
+    function saveScrollSettings(threshold, delay) {
+      chrome.storage.local.set({
+        scrollThreshold: threshold,
+        hideDelay: delay
+      });
+    }
 
     // Format mode state (0: Indented, 1: Left-aligned, 2: Compact)
     let currentFormatMode = 0;
