@@ -3,7 +3,13 @@
     "name": "EasyHTML",
     "version": "1.0",
     "description": "A simple HTML code formatter and previewer",
-    "permissions": ["clipboardWrite", "activeTab", "storage"],
+    "permissions": [
+      "clipboardWrite", 
+      "activeTab", 
+      "scripting", 
+      "contextMenus", 
+      "storage"
+    ],
     "action": {
       "default_popup": "popup.html",
       "default_icon": {

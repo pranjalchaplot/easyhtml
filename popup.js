@@ -83,8 +83,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const formatModes = ['Indented', 'Left-aligned', 'Compact'];
 
     // Load saved content and format mode
-    chrome.storage.local.get(['htmlContent', 'formatMode'], function(result) {
-      if (result.htmlContent) {
+    chrome.storage.local.get(['htmlContent', 'formatMode', 'pageSource'], function(result) {
+      if (result.pageSource) {
+        htmlInput.value = result.pageSource;
+        chrome.storage.local.remove('pageSource');
+        updatePreview();
+      }
+      else if (result.htmlContent) {
         htmlInput.value = result.htmlContent;
         updatePreview();
       }
@@ -92,6 +97,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (result.formatMode !== undefined) {
         currentFormatMode = result.formatMode;
         updateFormatModeIndicator();
+      }
+    });
+
+    chrome.storage.local.get('pageSource', (data) => {
+      if (data.pageSource) {
+        htmlInput.value = data.pageSource;
+        // Optionally, clear the stored source after using it
+        chrome.storage.local.remove('pageSource');
       }
     });
 
