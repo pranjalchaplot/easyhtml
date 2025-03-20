@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const formatMode = document.getElementById('formatMode');
     const jumpToTopBtn = document.getElementById('jumpToTop');
     const jumpToBottomBtn = document.getElementById('jumpToBottom');
+    const scanPageBtn = document.getElementById('scanPageBtn');
+
     let scrollTimeout;
     let scrollThreshold = 0; // Default threshold for showing buttons (in pixels)
     let hideDelay = 1400; // Default delay before hiding buttons (in milliseconds)
@@ -56,6 +58,35 @@ document.addEventListener('DOMContentLoaded', function() {
     jumpToBottomBtn.addEventListener('click', function() {
       htmlInput.scrollTop = htmlInput.scrollHeight;
     });
+
+    scanPageBtn.addEventListener('click', function() {
+        scanCurrentPage();
+        showButtonFeedback(scanPageBtn);
+    });
+
+    function scanCurrentPage() {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs.length > 0) {
+              const tabId = tabs[0].id;
+              chrome.scripting.executeScript({
+                  target: { tabId: tabId },
+                  function: () => document.documentElement.outerHTML
+              }).then(results => {
+                  if (results && results.length > 0 && results[0].result) {
+                      const pageSource = results[0].result;
+                      htmlInput.value = pageSource;
+                      updatePreview();
+                      saveContent();
+                  } else {
+                      console.error("Failed to retrieve page source.");
+                  }
+              }).catch(error => {
+                  console.error("Error executing script:", error);
+              });
+          }
+      });
+    }
+
 
     // Update SVG colors based on dark mode
     function updateScrollButtonSvgColors() {

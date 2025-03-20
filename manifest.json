@@ -25,5 +25,16 @@
     },
     "background": {
       "service_worker": "background.js"
-    }
+    },
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "fonts/FigtreeVF.woff2",
+          "fonts/*"
+        ],
+        "matches": [
+          "<all_urls>"
+        ]
+      }
+    ]
   }

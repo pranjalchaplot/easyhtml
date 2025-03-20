@@ -323,3 +323,24 @@ body.dark-mode .format-indicator {
 body.dark-mode .header-title::after {
   background-color: #ff6666;
 }
+
+#scanPageBtn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+#scanPageBtn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+#scanPageBtn svg {
+  width: 24px;
+  height: 24px;
+}
