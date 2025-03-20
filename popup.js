@@ -213,20 +213,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updatePreview() {
-      const html = htmlInput.value;
-      const safeHTML = sanitizeHTML(html);
-      const iframe = document.getElementById("htmlOutput");
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      const htmlContent = htmlInput.value;
+      const safeHTML = sanitizeHTML(htmlContent);
+      // const htmlOutput = document.getElementById("htmlOutput");
+      // const doc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
     
-      // Clear existing content
-      while (doc.firstChild) {
-        doc.removeChild(doc.firstChild);
-      }
+      // // Clear existing content
+      // while (doc.firstChild) {
+      //   doc.removeChild(doc.firstChild);
+      // }
     
-      // Write the sanitized HTML
-      doc.open();
-      doc.write(safeHTML);
-      doc.close();
+      // // Write the sanitized HTML
+      // doc.open();
+      // doc.write(safeHTML);
+      // doc.close();
+        if (formatMode === 'Indented') {
+            htmlContent = formatHTML(htmlContent);
+        }
+        const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`;
+        htmlOutput.src = dataUrl;
     }
 
     // Function to clear HTML input
